@@ -96,16 +96,33 @@ def print_monitor_header(interval, num_cols):
         interval (float): Intervalo de atualização
         num_cols (int): Número de colunas da matriz
     """
-    # Largura baseada no número de colunas
-    width = max(44, num_cols * 7 + 10)
+    # Calcular largura baseada no número de colunas
+    # Cada coluna: letra (1) + espaço (6) = 7 chars
+    # Prefixo da linha: "│     " = 6 chars
+    # Sufixo: " │" = 2 chars
+    content_width = 6 + (num_cols * 7) + 2
+    box_width = max(46, content_width)
 
-    print("┌" + "─" * (width - 2) + "┐")
-    print(f"│   Matrix Monitor{' ' * (width - 19)}│")
-    print(f"│   Update interval: {interval}s | Ctrl+C to exit{' ' * (width - 45)}│")
-    print("├" + "─" * (width - 2) + "┤")
+    # Linha superior
+    print("┌" + "─" * (box_width - 2) + "┐")
+
+    # Título
+    title = "   Matrix Monitor"
+    padding = box_width - len(title) - 3
+    print(f"│{title}{' ' * padding}│")
+
+    # Info
+    info = f"   Update interval: {interval}s | Ctrl+C to exit"
+    padding = box_width - len(info) - 3
+    print(f"│{info}{' ' * padding}│")
+
+    # Divisor
+    print("├" + "─" * (box_width - 2) + "┤")
+
+    return box_width
 
 
-def print_matrix_visual(matrix_state, num_rows, num_cols):
+def print_matrix_visual(matrix_state, num_rows, num_cols, box_width):
     """
     Imprime representação visual da matriz com emojis.
 
@@ -113,18 +130,20 @@ def print_matrix_visual(matrix_state, num_rows, num_cols):
         matrix_state (list): Estado da matriz 2D
         num_rows (int): Número de linhas
         num_cols (int): Número de colunas
+        box_width (int): Largura da caixa
     """
     # Cabeçalho de colunas (A, B, C, ...)
-    col_headers = "│     "
+    col_headers = "     "
     for col in range(num_cols):
         col_letter = chr(ord('A') + col)
         col_headers += f"{col_letter}      "
-    col_headers += " " * (44 - len(col_headers) - 1) + "│"
-    print(col_headers)
+
+    padding = box_width - len(col_headers) - 3
+    print(f"│{col_headers}{' ' * padding}│")
 
     # Linhas da matriz
     for row in range(num_rows):
-        row_str = f"│ {row + 1}  "
+        row_str = f" {row + 1}  "
         for col in range(num_cols):
             if matrix_state[row][col] == 'on':
                 row_str += "[🟢]    "
@@ -132,11 +151,11 @@ def print_matrix_visual(matrix_state, num_rows, num_cols):
                 row_str += "[🔴]    "
 
         # Preencher espaço restante
-        row_str += " " * (44 - len(row_str) - 1) + "│"
-        print(row_str)
+        padding = box_width - len(row_str) - 3
+        print(f"│{row_str}{' ' * padding}│")
 
     # Rodapé
-    print("└" + "─" * 42 + "┘")
+    print("└" + "─" * (box_width - 2) + "┘")
 
 
 def monitor_continuous(config, interval):
@@ -174,13 +193,13 @@ def monitor_continuous(config, interval):
     try:
         while True:
             clear_screen()
-            print_monitor_header(interval, num_cols)
+            box_width = print_monitor_header(interval, num_cols)
 
             # Ler matriz
             matrix_state = gpio_manager.read_matrix(rows, cols, closed_state)
 
             # Mostrar estado visual
-            print_matrix_visual(matrix_state, num_rows, num_cols)
+            print_matrix_visual(matrix_state, num_rows, num_cols, box_width)
 
             # Aguardar próximo ciclo
             time.sleep(interval)
