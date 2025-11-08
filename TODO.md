@@ -12,16 +12,16 @@
 - [x] 2.3. Criar módulo `gpio_manager.py` - Gerenciamento de GPIO (setup, cleanup)
 
 ### 3. Script matrix_write.py
-- [ ] 3.1. Implementar parsing de argumentos da linha de comando
-- [ ] 3.2. Implementar validação de posições (formato A1 ou numérico)
-- [ ] 3.3. Implementar validação de duração (0.5s a 600s)
-- [ ] 3.4. Implementar lógica de ativação/desativação de posição
-- [ ] 3.5. Implementar detecção e tratamento de conflitos
-- [ ] 3.6. Implementar timeout automático para duração definida
-- [ ] 3.7. Implementar safety_timeout do config.yaml
-- [ ] 3.8. Implementar force_off_on_conflict
-- [ ] 3.9. Implementar exit codes específicos (-1 a -6)
-- [ ] 3.10. Implementar mensagens de saída conforme especificação
+- [x] 3.1. Implementar parsing de argumentos da linha de comando
+- [x] 3.2. Implementar validação de posições (formato A1 ou numérico)
+- [x] 3.3. Implementar validação de duração (0.5s a 600s)
+- [x] 3.4. Implementar lógica de ativação/desativação de posição
+- [x] 3.5. Implementar detecção e tratamento de conflitos
+- [x] 3.6. Implementar timeout automático para duração definida
+- [x] 3.7. Implementar safety_timeout do config.yaml
+- [x] 3.8. Implementar force_off_on_conflict
+- [x] 3.9. Implementar exit codes específicos (-1 a -6)
+- [x] 3.10. Implementar mensagens de saída conforme especificação
 
 ### 4. Script matrix_read.py
 - [x] 4.1. Implementar parsing de argumentos (--interval)
@@ -84,5 +84,6 @@
 ---
 
 ## 🎯 Status Atual
-**Fase**: matrix_read.py completo (9/9 tarefas)
-**Próximo passo**: Implementar matrix_write.py (10 sub-tarefas)
+**Fase**: Scripts principais completos (matrix_read.py e matrix_write.py)
+**Progresso**: 24/40 tarefas concluídas (60%)
+**Próximo passo**: Testes e validação dos scripts
