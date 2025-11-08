@@ -3,8 +3,8 @@
 ## 📋 Lista de Tarefas (em ordem de execução)
 
 ### 1. Configuração Inicial do Projeto
-- [ ] 1.1. Criar arquivo `requirements.txt` com dependências Python
-- [ ] 1.2. Criar arquivo `config.yaml` de exemplo com configurações padrão
+- [x] 1.1. Criar arquivo `requirements.txt` com dependências Python
+- [x] 1.2. Criar arquivo `config.yaml` de exemplo com configurações padrão
 
 ### 2. Módulos Compartilhados
 - [ ] 2.1. Criar módulo `config_loader.py` - Carregamento e validação do config.yaml
@@ -84,5 +84,5 @@
 ---
 
 ## 🎯 Status Atual
-**Fase**: Início do projeto
-**Próximo passo**: Criar requirements.txt e config.yaml
+**Fase**: Configuração inicial completa (2/2 tarefas)
+**Próximo passo**: Criar módulos compartilhados (config_loader.py, matrix_utils.py, gpio_manager.py)
