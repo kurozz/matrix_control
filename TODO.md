@@ -7,9 +7,9 @@
 - [x] 1.2. Criar arquivo `config.yaml` de exemplo com configurações padrão
 
 ### 2. Módulos Compartilhados
-- [ ] 2.1. Criar módulo `config_loader.py` - Carregamento e validação do config.yaml
-- [ ] 2.2. Criar módulo `matrix_utils.py` - Funções auxiliares (conversão de posições, validações)
-- [ ] 2.3. Criar módulo `gpio_manager.py` - Gerenciamento de GPIO (setup, cleanup)
+- [x] 2.1. Criar módulo `config_loader.py` - Carregamento e validação do config.yaml
+- [x] 2.2. Criar módulo `matrix_utils.py` - Funções auxiliares (conversão de posições, validações)
+- [x] 2.3. Criar módulo `gpio_manager.py` - Gerenciamento de GPIO (setup, cleanup)
 
 ### 3. Script matrix_write.py
 - [ ] 3.1. Implementar parsing de argumentos da linha de comando
@@ -84,5 +84,5 @@
 ---
 
 ## 🎯 Status Atual
-**Fase**: Configuração inicial completa (2/2 tarefas)
-**Próximo passo**: Criar módulos compartilhados (config_loader.py, matrix_utils.py, gpio_manager.py)
+**Fase**: Módulos compartilhados completos (3/3 tarefas)
+**Próximo passo**: Implementar matrix_write.py (10 sub-tarefas)
