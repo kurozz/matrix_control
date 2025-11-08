@@ -24,15 +24,15 @@
 - [ ] 3.10. Implementar mensagens de saída conforme especificação
 
 ### 4. Script matrix_read.py
-- [ ] 4.1. Implementar parsing de argumentos (--interval)
-- [ ] 4.2. Implementar leitura única da matriz
-- [ ] 4.3. Implementar saída JSON para leitura única
-- [ ] 4.4. Implementar modo contínuo (monitor)
-- [ ] 4.5. Implementar display visual com emojis (🟢/🔴)
-- [ ] 4.6. Implementar atualização em tempo real (limpar tela)
-- [ ] 4.7. Implementar tratamento de Ctrl+C para saída limpa
-- [ ] 4.8. Implementar exit codes específicos (0, -5, -6)
-- [ ] 4.9. Suporte a matrizes de tamanho configurável
+- [x] 4.1. Implementar parsing de argumentos (--interval)
+- [x] 4.2. Implementar leitura única da matriz
+- [x] 4.3. Implementar saída JSON para leitura única
+- [x] 4.4. Implementar modo contínuo (monitor)
+- [x] 4.5. Implementar display visual com emojis (🟢/🔴)
+- [x] 4.6. Implementar atualização em tempo real (limpar tela)
+- [x] 4.7. Implementar tratamento de Ctrl+C para saída limpa
+- [x] 4.8. Implementar exit codes específicos (0, -5, -6)
+- [x] 4.9. Suporte a matrizes de tamanho configurável
 
 ### 5. Tratamento de Erros e Robustez
 - [ ] 5.1. Implementar tratamento de GPIO ocupado
@@ -84,5 +84,5 @@
 ---
 
 ## 🎯 Status Atual
-**Fase**: Módulos compartilhados completos (3/3 tarefas)
+**Fase**: matrix_read.py completo (9/9 tarefas)
 **Próximo passo**: Implementar matrix_write.py (10 sub-tarefas)
