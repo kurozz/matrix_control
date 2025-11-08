@@ -96,15 +96,28 @@ Exemplos:
   python matrix_write.py A2 on 2.0     # Ativa A2 por 2 segundos
   python matrix_write.py 4 on          # Ativa posição 4 indefinidamente
   python matrix_write.py A2 off        # Desativa A2
+  python matrix_write.py reset         # Desativa tudo e limpa estado
         """
     )
 
-    parser.add_argument('position', type=str, help='Posição (A1 ou 4)')
-    parser.add_argument('action', type=str, choices=['on', 'off'], help='Ação: on ou off')
+    parser.add_argument('position', type=str, help='Posição (A1 ou 4) ou "reset"')
+    parser.add_argument('action', type=str, nargs='?', choices=['on', 'off'], help='Ação: on ou off')
     parser.add_argument('duration', type=float, nargs='?', default=None,
                        help='Duração em segundos (opcional, apenas para "on")')
 
     args = parser.parse_args()
+
+    # Comando especial: reset
+    if args.position.lower() == 'reset':
+        args.is_reset = True
+        return args
+
+    args.is_reset = False
+
+    # Validar que action é obrigatório quando não é reset
+    if args.action is None:
+        print("ERRO: Ação 'on' ou 'off' é obrigatória")
+        sys.exit(-1)
 
     # Validar que duração só é usada com "on"
     if args.action == 'off' and args.duration is not None:
@@ -265,6 +278,7 @@ def deactivate_position(config, position_str):
     pinout = output_cfg['pinout']
     rows = pinout['rows']
     cols = pinout['cols']
+    active_level = pinout['active_level']
 
     num_rows = len(rows)
     num_cols = len(cols)
@@ -284,8 +298,38 @@ def deactivate_position(config, position_str):
             print(f"ERRO: Posição {position_alpha} não está ativada (posição ativa: {state['active_position']})")
         sys.exit(-1)
 
+    # Configurar GPIO antes de desativar (essencial!)
+    gpio_manager.setup_output_matrix(rows, cols, active_level)
+
     # Desativar posição
     deactivate_position_internal(config, state, show_message=True)
+
+
+def reset_all(config):
+    """
+    Desativa todas as posições e limpa o estado.
+    Útil quando a configuração foi alterada e o estado está inconsistente.
+
+    Args:
+        config (dict): Configuração completa
+    """
+    # Validar e obter configuração de saída
+    output_cfg = config_loader.validate_output_config(config)
+    pinout = output_cfg['pinout']
+    rows = pinout['rows']
+    cols = pinout['cols']
+    active_level = pinout['active_level']
+
+    # Configurar GPIO
+    gpio_manager.setup_output_matrix(rows, cols, active_level)
+
+    # Desativar todos os pinos
+    gpio_manager.deactivate_all(rows, cols, active_level)
+
+    # Limpar estado
+    clear_state()
+
+    print("Sistema resetado: todas as posições desativadas e estado limpo")
 
 
 def main():
@@ -299,7 +343,10 @@ def main():
     config = config_loader.load_config('config.yaml')
 
     # Executar ação
-    if args.action == 'on':
+    if args.is_reset:
+        # Comando especial: reset
+        reset_all(config)
+    elif args.action == 'on':
         activate_position(config, args.position, args.duration)
     elif args.action == 'off':
         deactivate_position(config, args.position)
