@@ -20,6 +20,11 @@ cd matrix_control
 # Instalar dependências
 pip install -r requirements.txt
 
+# Criar arquivo de configuração a partir do template
+cp config.yaml.example config.yaml
+# Editar config.yaml com seus GPIOs específicos
+nano config.yaml
+
 # Configurar permissões GPIO
 sudo usermod -a -G gpio $USER
 # Logout e login novamente
@@ -29,7 +34,17 @@ sudo usermod -a -G gpio $USER
 
 ## ⚙️ Arquivo de Configuração
 
+**Template:** `config.yaml.example` (copie para `config.yaml` e edite conforme seu hardware)
+
 **Localização:** `config.yaml` (mesmo diretório dos scripts)
+
+**Importante:** O arquivo `config.yaml` não é versionado. Você deve criá-lo a partir do template:
+```bash
+cp config.yaml.example config.yaml
+nano config.yaml  # Ajuste os GPIOs conforme seu hardware
+```
+
+**Exemplo de configuração:**
 
 ```yaml
 # config.yaml
@@ -288,7 +303,12 @@ pkill -f matrix_write.py
 
 ```
 matrix_control/
-├── config.yaml              # Configuração do hardware
+├── .gitignore               # Arquivos ignorados pelo Git
+├── config.yaml.example      # Template de configuração
+├── config.yaml              # Configuração do hardware (criar localmente)
+├── config_loader.py         # Módulo de carregamento de configuração
+├── gpio_manager.py          # Módulo de gerenciamento de GPIO
+├── matrix_utils.py          # Módulo de funções auxiliares
 ├── matrix_write.py          # Script de controle de saída
 ├── matrix_read.py           # Script de leitura de entrada
 └── requirements.txt         # Dependências Python
