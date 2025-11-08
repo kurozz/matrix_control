@@ -46,16 +46,16 @@ output:
   # Comente a linha abaixo para não ter timeout
   safety_timeout: 300  # 5 minutos
 
-  # Forçar fechamento de porta em uso ao abrir outra
-  force_close_on_conflict: true
-  
+  # Forçar desativação de posição ativa ao ativar outra
+  force_off_on_conflict: true
+
 input:
   # Matriz de entrada (keypad, etc)
   input_matrix:
     rows: [16, 26, 20]      # GPIO BCM numbering
     cols: [12, 13, 19]
     pull_mode: DOWN         # DOWN ou UP
-    closed_state: HIGH      # HIGH = Switch NC, LOW = Switch NA
+    closed_state: HIGH      # HIGH = Switch NA, LOW = Switch NC
 
   # Intervalo de atualização do padrão do modo monitor (segundos)
   monitor_interval: 0.5
@@ -156,7 +156,7 @@ python matrix_read.py [--interval intervalo]
 
 #### Leitura única
 
-1. Exibe status visual de todas as portas
+1. Exibe status visual de todas as posições
 #### Leitura contínua
 
 1. Faz a leitura a cada `intervalo` segundos
@@ -287,11 +287,11 @@ pkill -f matrix_write.py
 ## 📦 Estrutura do Projeto
 
 ```
-locker-control/
+matrix_control/
 ├── config.yaml              # Configuração do hardware
 ├── matrix_write.py          # Script de controle de saída
 ├── matrix_read.py           # Script de leitura de entrada
-├── requirements.txt         # Dependências Python
+└── requirements.txt         # Dependências Python
 ```
 
 ---
@@ -353,7 +353,7 @@ python matrix_write.py A2 on  # Ativa a posição A2
 python matrix_write.py A2 off # Desativa a posição A2
 ```
 
-### **Teste de Todas as Portas**
+### **Teste de Todas as Posições**
 
 ```bash
 # Terminal 1
