@@ -1,0 +1,27 @@
+# config.yaml
+
+output:
+  # Matriz de acionamento (LEDs, etc)
+  pinout:
+    rows: [22, 23, 24]      # GPIO BCM numbering
+    cols: [17, 18, 27]
+    active_level: HIGH      # HIGH ou LOW (lógica do relé)
+
+  # Timeout de segurança (segundos)
+  # Desaciona a matriz de saída após esse tempo
+  # Comente a linha abaixo para não ter timeout
+  safety_timeout: 300  # 5 minutos
+
+  # Forçar desativação de posição ativa ao ativar outra
+  force_off_on_conflict: true
+
+input:
+  # Matriz de entrada (keypad, etc)
+  input_matrix:
+    rows: [16, 26, 20]      # GPIO BCM numbering
+    cols: [12, 13, 19]
+    pull_mode: DOWN         # DOWN ou UP
+    closed_state: HIGH      # HIGH = Switch NA, LOW = Switch NC
+
+  # Intervalo de atualização do padrão do modo monitor (segundos)
+  monitor_interval: 0.5
