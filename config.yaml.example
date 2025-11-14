@@ -7,14 +7,6 @@ output:
     cols: [17, 27, 22]
     active_level: HIGH      # HIGH ou LOW (lógica do relé)
 
-  # Timeout de segurança (segundos)
-  # Desaciona a matriz de saída após esse tempo
-  # Comente a linha abaixo para não ter timeout
-  safety_timeout: 300  # 5 minutos
-
-  # Forçar desativação de posição ativa ao ativar outra
-  force_off_on_conflict: true
-
 input:
   # Matriz de entrada (keypad, etc)
   input_matrix:
