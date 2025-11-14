@@ -93,10 +93,6 @@ def validate_output_config(config):
         print("ERRO: 'active_level' deve ser 'HIGH' ou 'LOW'")
         sys.exit(-6)
 
-    # Validar force_off_on_conflict (opcional, default=True)
-    if 'force_off_on_conflict' not in output:
-        output['force_off_on_conflict'] = True
-
     return output
 
 

@@ -56,11 +56,6 @@ output:
     cols: [17, 18, 27]
     active_level: HIGH      # HIGH ou LOW (lógica do relé)
 
-  # Timeout de segurança (segundos)
-  # Desaciona a matriz de saída após esse tempo
-  # Comente a linha abaixo para não ter timeout
-  safety_timeout: 300  # 5 minutos
-
 input:
   # Matriz de entrada (keypad, etc)
   input_matrix:
@@ -282,7 +277,7 @@ CONFIG_PATH = '/caminho/completo/para/config.yaml'
 
 ```bash
 # Verificar se script ficou em background
-ps aux | grep matrix_write.py
+ps aux | grep python
 
 # Matar processos órfãos
 pkill -f matrix_write.py

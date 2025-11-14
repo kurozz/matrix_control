@@ -87,7 +87,6 @@ def activate_position(config, position_str, duration=None):
     rows = pinout['rows']
     cols = pinout['cols']
     active_level = pinout['active_level']
-    safety_timeout = output_cfg.get('safety_timeout', None)
 
     num_rows = len(rows)
     num_cols = len(cols)
@@ -110,20 +109,12 @@ def activate_position(config, position_str, duration=None):
     col_pin = cols[col]
     gpio_manager.activate_position(row_pin, col_pin, active_level)
 
-    # Determinar duração efetiva (considerar safety_timeout)
-    effective_duration = duration
-    if safety_timeout is not None:
-        if effective_duration is None:
-            effective_duration = safety_timeout
-        else:
-            effective_duration = min(effective_duration, safety_timeout)
-
     # Mostrar mensagem
     print(f"Posição {position_alpha}: ATIVADA por {duration}s")
 
     # Criar thread para desativar automaticamente
     def auto_deactivate():
-        time.sleep(effective_duration)
+        time.sleep(duration)
         # Desativar a posição
         gpio_manager.deactivate_position(row_pin, col_pin, active_level)
 
