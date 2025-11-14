@@ -81,9 +81,9 @@ def setup_output_matrix(rows, cols, active_level):
         # Se active_level=HIGH, linhas inativas=HIGH (não drenam)
         # Se active_level=LOW, linhas inativas=LOW (não drenam)
         if active_level == 'HIGH':
-            row_inactive = GPIO.HIGH  # Não drena
+            row_inactive = GPIO.LOW  # Não drena
         else:
-            row_inactive = GPIO.LOW   # Não drena
+            row_inactive = GPIO.HIGH   # Não drena
 
         # Estado inativo para COLUNAS (anodos): oposto do active_level
         # Se active_level=HIGH, colunas inativas=LOW (não fornecem)
@@ -157,11 +157,11 @@ def activate_position(row_pin, col_pin, active_level):
         if active_level == 'HIGH':
             # Coluna HIGH (fornece), Linha LOW (drena)
             GPIO.output(col_pin, GPIO.HIGH)
-            GPIO.output(row_pin, GPIO.LOW)
+            GPIO.output(row_pin, GPIO.HIGH)
         else:
             # Coluna LOW (fornece), Linha HIGH (drena)
             GPIO.output(col_pin, GPIO.LOW)
-            GPIO.output(row_pin, GPIO.HIGH)
+            GPIO.output(row_pin, GPIO.LOW)
     except Exception as e:
         print(f"ERRO: Não foi possível ativar posição: {e}")
         sys.exit(-5)
@@ -184,11 +184,11 @@ def deactivate_position(row_pin, col_pin, active_level):
         if active_level == 'HIGH':
             # Coluna LOW (não fornece), Linha HIGH (não drena)
             GPIO.output(col_pin, GPIO.LOW)
-            GPIO.output(row_pin, GPIO.HIGH)
+            GPIO.output(row_pin, GPIO.LOW)
         else:
             # Coluna HIGH (não fornece), Linha LOW (não drena)
             GPIO.output(col_pin, GPIO.HIGH)
-            GPIO.output(row_pin, GPIO.LOW)
+            GPIO.output(row_pin, GPIO.HIGH)
     except Exception as e:
         print(f"ERRO: Não foi possível desativar posição: {e}")
         sys.exit(-5)
@@ -210,10 +210,10 @@ def deactivate_all(rows, cols, active_level):
     try:
         # Estado inativo para linhas e colunas
         if active_level == 'HIGH':
-            row_inactive = GPIO.HIGH  # Não drena
+            row_inactive = GPIO.LOW  # Não drena
             col_inactive = GPIO.LOW   # Não fornece
         else:
-            row_inactive = GPIO.LOW   # Não drena
+            row_inactive = GPIO.HIGH   # Não drena
             col_inactive = GPIO.HIGH  # Não fornece
 
         for row_pin in rows:
