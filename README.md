@@ -277,7 +277,7 @@ CONFIG_PATH = '/caminho/completo/para/config.yaml'
 
 ```bash
 # Verificar se script ficou em background
-ps aux | grep python
+ps aux | grep matrix_write.py
 
 # Matar processos órfãos
 pkill -f matrix_write.py
