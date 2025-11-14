@@ -87,3 +87,14 @@
 **Fase**: Scripts principais completos (matrix_read.py e matrix_write.py)
 **Progresso**: 24/40 tarefas concluídas (60%)
 **Próximo passo**: Testes e validação dos scripts
+
+---
+
+## 📝 Alterações Recentes
+
+### Simplificação do matrix_write.py (2024)
+- **Removido**: Comandos 'on' e 'off'
+- **Alterado**: Duração agora é obrigatória (não opcional)
+- **Nova sintaxe**: `python matrix_write.py <posição> <duração>`
+- **Mantido**: Comando 'reset' inalterado
+- **Vantagem**: Interface mais simples e direta
