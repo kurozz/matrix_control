@@ -62,10 +62,14 @@ def setup_output_matrix(rows, cols, active_level):
     """
     Configura matriz de saída (rows como OUTPUT, cols como OUTPUT).
 
+    Para matriz de ânodo comum (cols=anodos, rows=catodos):
+    - Colunas fornecem corrente (active_level aplica aqui)
+    - Linhas drenam corrente (lógica invertida)
+
     Args:
-        rows (list): Lista de GPIOs para linhas
-        cols (list): Lista de GPIOs para colunas
-        active_level (str): 'HIGH' ou 'LOW'
+        rows (list): Lista de GPIOs para linhas (catodos/dreno)
+        cols (list): Lista de GPIOs para colunas (anodos/fonte)
+        active_level (str): 'HIGH' ou 'LOW' (aplicado às colunas)
 
     Exit codes:
         -5: Erro ao configurar GPIO
@@ -73,21 +77,31 @@ def setup_output_matrix(rows, cols, active_level):
     setup_gpio()
 
     try:
+        # Estado inativo para LINHAS (catodos): oposto do active_level
+        # Se active_level=HIGH, linhas inativas=HIGH (não drenam)
+        # Se active_level=LOW, linhas inativas=LOW (não drenam)
+        if active_level == 'HIGH':
+            row_inactive = GPIO.HIGH  # Não drena
+        else:
+            row_inactive = GPIO.LOW   # Não drena
+
+        # Estado inativo para COLUNAS (anodos): oposto do active_level
+        # Se active_level=HIGH, colunas inativas=LOW (não fornecem)
+        # Se active_level=LOW, colunas inativas=HIGH (não fornecem)
+        if active_level == 'HIGH':
+            col_inactive = GPIO.LOW   # Não fornece
+        else:
+            col_inactive = GPIO.HIGH  # Não fornece
+
         # Configurar todas as linhas como OUTPUT (inicialmente desativadas)
         for row_pin in rows:
             GPIO.setup(row_pin, GPIO.OUT)
-            if active_level == 'HIGH':
-                GPIO.output(row_pin, GPIO.LOW)  # Desativado
-            else:
-                GPIO.output(row_pin, GPIO.HIGH)  # Desativado
+            GPIO.output(row_pin, row_inactive)
 
         # Configurar todas as colunas como OUTPUT (inicialmente desativadas)
         for col_pin in cols:
             GPIO.setup(col_pin, GPIO.OUT)
-            if active_level == 'HIGH':
-                GPIO.output(col_pin, GPIO.LOW)  # Desativado
-            else:
-                GPIO.output(col_pin, GPIO.HIGH)  # Desativado
+            GPIO.output(col_pin, col_inactive)
 
     except Exception as e:
         print(f"ERRO: Não foi possível configurar matriz de saída: {e}")
@@ -130,18 +144,24 @@ def activate_position(row_pin, col_pin, active_level):
     """
     Ativa uma posição específica na matriz de saída.
 
+    Para matriz de ânodo comum:
+    - Coluna recebe active_level (fornece corrente)
+    - Linha recebe OPOSTO (drena corrente)
+
     Args:
-        row_pin (int): GPIO da linha
-        col_pin (int): GPIO da coluna
+        row_pin (int): GPIO da linha (catodo/dreno)
+        col_pin (int): GPIO da coluna (anodo/fonte)
         active_level (str): 'HIGH' ou 'LOW'
     """
     try:
         if active_level == 'HIGH':
-            GPIO.output(row_pin, GPIO.HIGH)
+            # Coluna HIGH (fornece), Linha LOW (drena)
             GPIO.output(col_pin, GPIO.HIGH)
-        else:
             GPIO.output(row_pin, GPIO.LOW)
+        else:
+            # Coluna LOW (fornece), Linha HIGH (drena)
             GPIO.output(col_pin, GPIO.LOW)
+            GPIO.output(row_pin, GPIO.HIGH)
     except Exception as e:
         print(f"ERRO: Não foi possível ativar posição: {e}")
         sys.exit(-5)
@@ -151,18 +171,24 @@ def deactivate_position(row_pin, col_pin, active_level):
     """
     Desativa uma posição específica na matriz de saída.
 
+    Para matriz de ânodo comum:
+    - Coluna recebe OPOSTO de active_level (não fornece)
+    - Linha recebe active_level (não drena)
+
     Args:
-        row_pin (int): GPIO da linha
-        col_pin (int): GPIO da coluna
+        row_pin (int): GPIO da linha (catodo/dreno)
+        col_pin (int): GPIO da coluna (anodo/fonte)
         active_level (str): 'HIGH' ou 'LOW'
     """
     try:
         if active_level == 'HIGH':
-            GPIO.output(row_pin, GPIO.LOW)
+            # Coluna LOW (não fornece), Linha HIGH (não drena)
             GPIO.output(col_pin, GPIO.LOW)
-        else:
             GPIO.output(row_pin, GPIO.HIGH)
+        else:
+            # Coluna HIGH (não fornece), Linha LOW (não drena)
             GPIO.output(col_pin, GPIO.HIGH)
+            GPIO.output(row_pin, GPIO.LOW)
     except Exception as e:
         print(f"ERRO: Não foi possível desativar posição: {e}")
         sys.exit(-5)
@@ -172,19 +198,29 @@ def deactivate_all(rows, cols, active_level):
     """
     Desativa todas as posições da matriz de saída.
 
+    Para matriz de ânodo comum:
+    - Colunas no estado OPOSTO de active_level (não fornecem)
+    - Linhas no estado active_level (não drenam)
+
     Args:
-        rows (list): Lista de GPIOs para linhas
-        cols (list): Lista de GPIOs para colunas
+        rows (list): Lista de GPIOs para linhas (catodos/dreno)
+        cols (list): Lista de GPIOs para colunas (anodos/fonte)
         active_level (str): 'HIGH' ou 'LOW'
     """
     try:
-        inactive_state = GPIO.LOW if active_level == 'HIGH' else GPIO.HIGH
+        # Estado inativo para linhas e colunas
+        if active_level == 'HIGH':
+            row_inactive = GPIO.HIGH  # Não drena
+            col_inactive = GPIO.LOW   # Não fornece
+        else:
+            row_inactive = GPIO.LOW   # Não drena
+            col_inactive = GPIO.HIGH  # Não fornece
 
         for row_pin in rows:
-            GPIO.output(row_pin, inactive_state)
+            GPIO.output(row_pin, row_inactive)
 
         for col_pin in cols:
-            GPIO.output(col_pin, inactive_state)
+            GPIO.output(col_pin, col_inactive)
 
     except Exception as e:
         print(f"ERRO: Não foi possível desativar matriz: {e}")
