@@ -62,10 +62,12 @@ def setup_output_matrix(rows, cols, active_level):
     """
     Configura matriz de saída (rows como OUTPUT, cols como OUTPUT).
 
+    Inicializa todos os pinos no estado desativado (oposto do active_level).
+
     Args:
         rows (list): Lista de GPIOs para linhas
         cols (list): Lista de GPIOs para colunas
-        active_level (str): 'HIGH' ou 'LOW'
+        active_level (str): 'HIGH' ou 'LOW' - nível para ativar posições
 
     Exit codes:
         -5: Erro ao configurar GPIO
@@ -73,21 +75,23 @@ def setup_output_matrix(rows, cols, active_level):
     setup_gpio()
 
     try:
+        # Estado inativo (desativado): oposto do active_level
+        # active_level=HIGH → inativo=LOW
+        # active_level=LOW → inativo=HIGH
+        if active_level == 'HIGH':
+            inactive_state = GPIO.LOW
+        else:
+            inactive_state = GPIO.HIGH
+
         # Configurar todas as linhas como OUTPUT (inicialmente desativadas)
         for row_pin in rows:
             GPIO.setup(row_pin, GPIO.OUT)
-            if active_level == 'HIGH':
-                GPIO.output(row_pin, GPIO.LOW)  # Desativado
-            else:
-                GPIO.output(row_pin, GPIO.HIGH)  # Desativado
+            GPIO.output(row_pin, inactive_state)
 
         # Configurar todas as colunas como OUTPUT (inicialmente desativadas)
         for col_pin in cols:
             GPIO.setup(col_pin, GPIO.OUT)
-            if active_level == 'HIGH':
-                GPIO.output(col_pin, GPIO.LOW)  # Desativado
-            else:
-                GPIO.output(col_pin, GPIO.HIGH)  # Desativado
+            GPIO.output(col_pin, inactive_state)
 
     except Exception as e:
         print(f"ERRO: Não foi possível configurar matriz de saída: {e}")
@@ -130,6 +134,8 @@ def activate_position(row_pin, col_pin, active_level):
     """
     Ativa uma posição específica na matriz de saída.
 
+    Define row e col para o active_level configurado.
+
     Args:
         row_pin (int): GPIO da linha
         col_pin (int): GPIO da coluna
@@ -137,11 +143,13 @@ def activate_position(row_pin, col_pin, active_level):
     """
     try:
         if active_level == 'HIGH':
-            GPIO.output(row_pin, GPIO.HIGH)
+            # Ativar: ambos HIGH
             GPIO.output(col_pin, GPIO.HIGH)
+            GPIO.output(row_pin, GPIO.HIGH)
         else:
-            GPIO.output(row_pin, GPIO.LOW)
+            # Ativar: ambos LOW
             GPIO.output(col_pin, GPIO.LOW)
+            GPIO.output(row_pin, GPIO.LOW)
     except Exception as e:
         print(f"ERRO: Não foi possível ativar posição: {e}")
         sys.exit(-5)
@@ -151,6 +159,8 @@ def deactivate_position(row_pin, col_pin, active_level):
     """
     Desativa uma posição específica na matriz de saída.
 
+    Define row e col para o oposto do active_level configurado.
+
     Args:
         row_pin (int): GPIO da linha
         col_pin (int): GPIO da coluna
@@ -158,11 +168,13 @@ def deactivate_position(row_pin, col_pin, active_level):
     """
     try:
         if active_level == 'HIGH':
-            GPIO.output(row_pin, GPIO.LOW)
+            # Desativar: ambos LOW (oposto de HIGH)
             GPIO.output(col_pin, GPIO.LOW)
+            GPIO.output(row_pin, GPIO.LOW)
         else:
-            GPIO.output(row_pin, GPIO.HIGH)
+            # Desativar: ambos HIGH (oposto de LOW)
             GPIO.output(col_pin, GPIO.HIGH)
+            GPIO.output(row_pin, GPIO.HIGH)
     except Exception as e:
         print(f"ERRO: Não foi possível desativar posição: {e}")
         sys.exit(-5)
@@ -172,13 +184,21 @@ def deactivate_all(rows, cols, active_level):
     """
     Desativa todas as posições da matriz de saída.
 
+    Define todos os pinos (rows e cols) para o oposto do active_level.
+
     Args:
         rows (list): Lista de GPIOs para linhas
         cols (list): Lista de GPIOs para colunas
         active_level (str): 'HIGH' ou 'LOW'
     """
     try:
-        inactive_state = GPIO.LOW if active_level == 'HIGH' else GPIO.HIGH
+        # Estado inativo: oposto do active_level
+        # active_level=HIGH → inativo=LOW
+        # active_level=LOW → inativo=HIGH
+        if active_level == 'HIGH':
+            inactive_state = GPIO.LOW
+        else:
+            inactive_state = GPIO.HIGH
 
         for row_pin in rows:
             GPIO.output(row_pin, inactive_state)
