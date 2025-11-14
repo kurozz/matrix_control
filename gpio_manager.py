@@ -62,14 +62,12 @@ def setup_output_matrix(rows, cols, active_level):
     """
     Configura matriz de saída (rows como OUTPUT, cols como OUTPUT).
 
-    Para matriz de ânodo comum (cols=anodos, rows=catodos):
-    - Colunas fornecem corrente (active_level aplica aqui)
-    - Linhas drenam corrente (lógica invertida)
+    Inicializa todos os pinos no estado desativado (oposto do active_level).
 
     Args:
-        rows (list): Lista de GPIOs para linhas (catodos/dreno)
-        cols (list): Lista de GPIOs para colunas (anodos/fonte)
-        active_level (str): 'HIGH' ou 'LOW' (aplicado às colunas)
+        rows (list): Lista de GPIOs para linhas
+        cols (list): Lista de GPIOs para colunas
+        active_level (str): 'HIGH' ou 'LOW' - nível para ativar posições
 
     Exit codes:
         -5: Erro ao configurar GPIO
@@ -77,31 +75,23 @@ def setup_output_matrix(rows, cols, active_level):
     setup_gpio()
 
     try:
-        # Estado inativo para LINHAS (catodos): oposto do active_level
-        # Se active_level=HIGH, linhas inativas=HIGH (não drenam)
-        # Se active_level=LOW, linhas inativas=LOW (não drenam)
+        # Estado inativo (desativado): oposto do active_level
+        # active_level=HIGH → inativo=LOW
+        # active_level=LOW → inativo=HIGH
         if active_level == 'HIGH':
-            row_inactive = GPIO.LOW  # Não drena
+            inactive_state = GPIO.LOW
         else:
-            row_inactive = GPIO.HIGH   # Não drena
-
-        # Estado inativo para COLUNAS (anodos): oposto do active_level
-        # Se active_level=HIGH, colunas inativas=LOW (não fornecem)
-        # Se active_level=LOW, colunas inativas=HIGH (não fornecem)
-        if active_level == 'HIGH':
-            col_inactive = GPIO.LOW   # Não fornece
-        else:
-            col_inactive = GPIO.HIGH  # Não fornece
+            inactive_state = GPIO.HIGH
 
         # Configurar todas as linhas como OUTPUT (inicialmente desativadas)
         for row_pin in rows:
             GPIO.setup(row_pin, GPIO.OUT)
-            GPIO.output(row_pin, row_inactive)
+            GPIO.output(row_pin, inactive_state)
 
         # Configurar todas as colunas como OUTPUT (inicialmente desativadas)
         for col_pin in cols:
             GPIO.setup(col_pin, GPIO.OUT)
-            GPIO.output(col_pin, col_inactive)
+            GPIO.output(col_pin, inactive_state)
 
     except Exception as e:
         print(f"ERRO: Não foi possível configurar matriz de saída: {e}")
@@ -144,22 +134,20 @@ def activate_position(row_pin, col_pin, active_level):
     """
     Ativa uma posição específica na matriz de saída.
 
-    Para matriz de ânodo comum:
-    - Coluna recebe active_level (fornece corrente)
-    - Linha recebe OPOSTO (drena corrente)
+    Define row e col para o active_level configurado.
 
     Args:
-        row_pin (int): GPIO da linha (catodo/dreno)
-        col_pin (int): GPIO da coluna (anodo/fonte)
+        row_pin (int): GPIO da linha
+        col_pin (int): GPIO da coluna
         active_level (str): 'HIGH' ou 'LOW'
     """
     try:
         if active_level == 'HIGH':
-            # Coluna HIGH (fornece), Linha LOW (drena)
+            # Ativar: ambos HIGH
             GPIO.output(col_pin, GPIO.HIGH)
             GPIO.output(row_pin, GPIO.HIGH)
         else:
-            # Coluna LOW (fornece), Linha HIGH (drena)
+            # Ativar: ambos LOW
             GPIO.output(col_pin, GPIO.LOW)
             GPIO.output(row_pin, GPIO.LOW)
     except Exception as e:
@@ -171,22 +159,20 @@ def deactivate_position(row_pin, col_pin, active_level):
     """
     Desativa uma posição específica na matriz de saída.
 
-    Para matriz de ânodo comum:
-    - Coluna recebe OPOSTO de active_level (não fornece)
-    - Linha recebe active_level (não drena)
+    Define row e col para o oposto do active_level configurado.
 
     Args:
-        row_pin (int): GPIO da linha (catodo/dreno)
-        col_pin (int): GPIO da coluna (anodo/fonte)
+        row_pin (int): GPIO da linha
+        col_pin (int): GPIO da coluna
         active_level (str): 'HIGH' ou 'LOW'
     """
     try:
         if active_level == 'HIGH':
-            # Coluna LOW (não fornece), Linha HIGH (não drena)
+            # Desativar: ambos LOW (oposto de HIGH)
             GPIO.output(col_pin, GPIO.LOW)
             GPIO.output(row_pin, GPIO.LOW)
         else:
-            # Coluna HIGH (não fornece), Linha LOW (não drena)
+            # Desativar: ambos HIGH (oposto de LOW)
             GPIO.output(col_pin, GPIO.HIGH)
             GPIO.output(row_pin, GPIO.HIGH)
     except Exception as e:
@@ -198,29 +184,27 @@ def deactivate_all(rows, cols, active_level):
     """
     Desativa todas as posições da matriz de saída.
 
-    Para matriz de ânodo comum:
-    - Colunas no estado OPOSTO de active_level (não fornecem)
-    - Linhas no estado active_level (não drenam)
+    Define todos os pinos (rows e cols) para o oposto do active_level.
 
     Args:
-        rows (list): Lista de GPIOs para linhas (catodos/dreno)
-        cols (list): Lista de GPIOs para colunas (anodos/fonte)
+        rows (list): Lista de GPIOs para linhas
+        cols (list): Lista de GPIOs para colunas
         active_level (str): 'HIGH' ou 'LOW'
     """
     try:
-        # Estado inativo para linhas e colunas
+        # Estado inativo: oposto do active_level
+        # active_level=HIGH → inativo=LOW
+        # active_level=LOW → inativo=HIGH
         if active_level == 'HIGH':
-            row_inactive = GPIO.LOW  # Não drena
-            col_inactive = GPIO.LOW   # Não fornece
+            inactive_state = GPIO.LOW
         else:
-            row_inactive = GPIO.HIGH   # Não drena
-            col_inactive = GPIO.HIGH  # Não fornece
+            inactive_state = GPIO.HIGH
 
         for row_pin in rows:
-            GPIO.output(row_pin, row_inactive)
+            GPIO.output(row_pin, inactive_state)
 
         for col_pin in cols:
-            GPIO.output(col_pin, col_inactive)
+            GPIO.output(col_pin, inactive_state)
 
     except Exception as e:
         print(f"ERRO: Não foi possível desativar matriz: {e}")
