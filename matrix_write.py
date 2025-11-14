@@ -3,8 +3,8 @@
 matrix_write.py - Script para controle de matriz de saída (LEDs, relés, etc)
 
 Uso:
-    python matrix_write.py <posição> on [duração]
-    python matrix_write.py <posição> off
+    python matrix_write.py <posição> <duração>
+    python matrix_write.py reset
 
 Exit codes:
     0: Sucesso
@@ -93,17 +93,15 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Exemplos:
-  python matrix_write.py A2 on 2.0     # Ativa A2 por 2 segundos
-  python matrix_write.py 4 on          # Ativa posição 4 indefinidamente
-  python matrix_write.py A2 off        # Desativa A2
-  python matrix_write.py reset         # Desativa tudo e limpa estado
+  python matrix_write.py A2 2.0     # Ativa A2 por 2 segundos
+  python matrix_write.py 4 5.0      # Ativa posição 4 por 5 segundos
+  python matrix_write.py reset      # Desativa tudo e limpa estado
         """
     )
 
     parser.add_argument('position', type=str, help='Posição (A1 ou 4) ou "reset"')
-    parser.add_argument('action', type=str, nargs='?', choices=['on', 'off'], help='Ação: on ou off')
     parser.add_argument('duration', type=float, nargs='?', default=None,
-                       help='Duração em segundos (opcional, apenas para "on")')
+                       help='Duração em segundos (obrigatório, exceto para reset)')
 
     args = parser.parse_args()
 
@@ -114,14 +112,11 @@ Exemplos:
 
     args.is_reset = False
 
-    # Validar que action é obrigatório quando não é reset
-    if args.action is None:
-        print("ERRO: Ação 'on' ou 'off' é obrigatória")
-        sys.exit(-1)
-
-    # Validar que duração só é usada com "on"
-    if args.action == 'off' and args.duration is not None:
-        print("ERRO: Duração não pode ser especificada com ação 'off'")
+    # Validar que duração é obrigatória quando não é reset
+    if args.duration is None:
+        print("ERRO: Duração em segundos é obrigatória")
+        print("Uso: python matrix_write.py <posição> <duração>")
+        print("Exemplo: python matrix_write.py A1 2.0")
         sys.exit(-1)
 
     return args
@@ -239,70 +234,21 @@ def activate_position(config, position_str, duration=None):
             effective_duration = min(effective_duration, safety_timeout)
 
     # Mostrar mensagem
-    if duration is not None:
-        print(f"Posição {position_alpha}: ATIVADA por {duration}s")
-    else:
-        print(f"Posição {position_alpha}: ATIVADA (use 'python matrix_write.py {position_alpha} off' para desativar)")
+    print(f"Posição {position_alpha}: ATIVADA por {duration}s")
 
-    # Se houver timeout, criar thread para desativar automaticamente
-    if effective_duration is not None:
-        def auto_deactivate():
-            time.sleep(effective_duration)
-            # Recarregar estado para verificar se ainda é a mesma posição
-            current_state = load_state()
-            if current_state['active_position'] == position_alpha:
-                deactivate_position_internal(config, current_state, show_message=False)
+    # Criar thread para desativar automaticamente
+    def auto_deactivate():
+        time.sleep(effective_duration)
+        # Recarregar estado para verificar se ainda é a mesma posição
+        current_state = load_state()
+        if current_state['active_position'] == position_alpha:
+            deactivate_position_internal(config, current_state, show_message=False)
 
-        timer_thread = threading.Thread(target=auto_deactivate, daemon=True)
-        timer_thread.start()
+    timer_thread = threading.Thread(target=auto_deactivate, daemon=True)
+    timer_thread.start()
 
-        # Aguardar thread se foi especificado duração pelo usuário
-        if duration is not None:
-            timer_thread.join()
-
-
-def deactivate_position(config, position_str):
-    """
-    Desativa uma posição na matriz de saída.
-
-    Args:
-        config (dict): Configuração completa
-        position_str (str): Posição a desativar (A1 ou 4)
-
-    Exit codes:
-        -2: Posição inválida
-        -1: Posição não está ativada
-    """
-    # Validar e obter configuração de saída
-    output_cfg = config_loader.validate_output_config(config)
-    pinout = output_cfg['pinout']
-    rows = pinout['rows']
-    cols = pinout['cols']
-    active_level = pinout['active_level']
-
-    num_rows = len(rows)
-    num_cols = len(cols)
-
-    # Converter posição para coordenadas
-    row, col = matrix_utils.position_to_coords(position_str, num_rows, num_cols)
-    position_alpha = matrix_utils.coords_to_position_alpha(row, col)
-
-    # Carregar estado atual
-    state = load_state()
-
-    # Verificar se esta posição está ativa
-    if state['active_position'] != position_alpha:
-        if state['active_position'] is None:
-            print(f"ERRO: Nenhuma posição está ativada")
-        else:
-            print(f"ERRO: Posição {position_alpha} não está ativada (posição ativa: {state['active_position']})")
-        sys.exit(-1)
-
-    # Configurar GPIO antes de desativar (essencial!)
-    gpio_manager.setup_output_matrix(rows, cols, active_level)
-
-    # Desativar posição
-    deactivate_position_internal(config, state, show_message=True)
+    # Aguardar thread completar
+    timer_thread.join()
 
 
 def reset_all(config):
@@ -346,10 +292,9 @@ def main():
     if args.is_reset:
         # Comando especial: reset
         reset_all(config)
-    elif args.action == 'on':
+    else:
+        # Ativar posição com duração especificada
         activate_position(config, args.position, args.duration)
-    elif args.action == 'off':
-        deactivate_position(config, args.position)
 
     # Cleanup
     gpio_manager.cleanup_gpio()
