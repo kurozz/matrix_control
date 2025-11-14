@@ -10,7 +10,6 @@ Exit codes:
     0: Sucesso
     -1: Erro genérico
     -2: Posição inválida
-    -3: Posição já ativada
     -4: Duração inválida
     -5: Erro de hardware (GPIO)
     -6: Arquivo de configuração não encontrado
@@ -20,65 +19,11 @@ import sys
 import argparse
 import time
 import threading
-import os
-import json
-from pathlib import Path
 
 # Importar módulos locais
 import config_loader
 import matrix_utils
 import gpio_manager
-
-
-# Arquivo para rastrear estado da matriz
-STATE_FILE = '/tmp/matrix_write_state.json'
-
-
-def load_state():
-    """
-    Carrega o estado atual da matriz do arquivo.
-
-    Returns:
-        dict: Estado com 'active_position', 'row', 'col', 'timer_thread'
-    """
-    if os.path.exists(STATE_FILE):
-        try:
-            with open(STATE_FILE, 'r') as f:
-                return json.load(f)
-        except:
-            pass
-
-    return {
-        'active_position': None,
-        'row': None,
-        'col': None,
-        'timestamp': None
-    }
-
-
-def save_state(state):
-    """
-    Salva o estado atual da matriz no arquivo.
-
-    Args:
-        state (dict): Estado a ser salvo
-    """
-    try:
-        with open(STATE_FILE, 'w') as f:
-            json.dump(state, f)
-    except Exception as e:
-        print(f"AVISO: Não foi possível salvar estado: {e}")
-
-
-def clear_state():
-    """
-    Limpa o arquivo de estado.
-    """
-    try:
-        if os.path.exists(STATE_FILE):
-            os.remove(STATE_FILE)
-    except:
-        pass
 
 
 def parse_arguments():
@@ -95,7 +40,7 @@ def parse_arguments():
 Exemplos:
   python matrix_write.py A2 2.0     # Ativa A2 por 2 segundos
   python matrix_write.py 4 5.0      # Ativa posição 4 por 5 segundos
-  python matrix_write.py reset      # Desativa tudo e limpa estado
+  python matrix_write.py reset      # Desativa todas as posições
         """
     )
 
@@ -122,37 +67,6 @@ Exemplos:
     return args
 
 
-def deactivate_position_internal(config, state, show_message=True):
-    """
-    Desativa a posição atualmente ativa (função interna).
-
-    Args:
-        config (dict): Configuração completa
-        state (dict): Estado atual
-        show_message (bool): Se deve mostrar mensagem de desativação
-    """
-    if state['active_position'] is None:
-        return
-
-    # Obter configuração de saída
-    output_cfg = config_loader.validate_output_config(config)
-    pinout = output_cfg['pinout']
-    rows = pinout['rows']
-    cols = pinout['cols']
-    active_level = pinout['active_level']
-
-    # Desativar GPIO
-    row_pin = rows[state['row']]
-    col_pin = cols[state['col']]
-    gpio_manager.deactivate_position(row_pin, col_pin, active_level)
-
-    if show_message:
-        print(f"Posição {state['active_position']}: DESATIVADA")
-
-    # Limpar estado
-    clear_state()
-
-
 def activate_position(config, position_str, duration=None):
     """
     Ativa uma posição na matriz de saída.
@@ -160,11 +74,10 @@ def activate_position(config, position_str, duration=None):
     Args:
         config (dict): Configuração completa
         position_str (str): Posição a ativar (A1 ou 4)
-        duration (float): Duração em segundos (None = indefinido)
+        duration (float): Duração em segundos
 
     Exit codes:
         -2: Posição inválida
-        -3: Posição já ativada
         -4: Duração inválida
         -5: Erro de GPIO
     """
@@ -174,7 +87,6 @@ def activate_position(config, position_str, duration=None):
     rows = pinout['rows']
     cols = pinout['cols']
     active_level = pinout['active_level']
-    force_off_on_conflict = output_cfg.get('force_off_on_conflict', True)
     safety_timeout = output_cfg.get('safety_timeout', None)
 
     num_rows = len(rows)
@@ -190,24 +102,6 @@ def activate_position(config, position_str, duration=None):
             print(f"ERRO: Duração inválida: {duration}s - deve estar entre 0.5s e 600s")
             sys.exit(-4)
 
-    # Carregar estado atual
-    state = load_state()
-
-    # Verificar se esta posição já está ativa
-    if state['active_position'] == position_alpha:
-        print(f"ERRO: Posição {position_alpha} já está ativada")
-        sys.exit(-3)
-
-    # Verificar se outra posição está ativa
-    if state['active_position'] is not None:
-        if force_off_on_conflict:
-            # Desativar a posição anterior
-            deactivate_position_internal(config, state, show_message=False)
-        else:
-            print(f"ERRO: Posição {state['active_position']} já está ativada")
-            print(f"Desative-a antes de ativar outra posição")
-            sys.exit(-3)
-
     # Configurar GPIO
     gpio_manager.setup_output_matrix(rows, cols, active_level)
 
@@ -215,15 +109,6 @@ def activate_position(config, position_str, duration=None):
     row_pin = rows[row]
     col_pin = cols[col]
     gpio_manager.activate_position(row_pin, col_pin, active_level)
-
-    # Salvar novo estado
-    new_state = {
-        'active_position': position_alpha,
-        'row': row,
-        'col': col,
-        'timestamp': time.time()
-    }
-    save_state(new_state)
 
     # Determinar duração efetiva (considerar safety_timeout)
     effective_duration = duration
@@ -239,10 +124,8 @@ def activate_position(config, position_str, duration=None):
     # Criar thread para desativar automaticamente
     def auto_deactivate():
         time.sleep(effective_duration)
-        # Recarregar estado para verificar se ainda é a mesma posição
-        current_state = load_state()
-        if current_state['active_position'] == position_alpha:
-            deactivate_position_internal(config, current_state, show_message=False)
+        # Desativar a posição
+        gpio_manager.deactivate_position(row_pin, col_pin, active_level)
 
     timer_thread = threading.Thread(target=auto_deactivate, daemon=True)
     timer_thread.start()
@@ -253,8 +136,8 @@ def activate_position(config, position_str, duration=None):
 
 def reset_all(config):
     """
-    Desativa todas as posições e limpa o estado.
-    Útil quando a configuração foi alterada e o estado está inconsistente.
+    Desativa todas as posições da matriz.
+    Útil quando a configuração foi alterada.
 
     Args:
         config (dict): Configuração completa
@@ -272,10 +155,7 @@ def reset_all(config):
     # Desativar todos os pinos
     gpio_manager.deactivate_all(rows, cols, active_level)
 
-    # Limpar estado
-    clear_state()
-
-    print("Sistema resetado: todas as posições desativadas e estado limpo")
+    print("Sistema resetado: todas as posições desativadas")
 
 
 def main():
