@@ -61,9 +61,6 @@ output:
   # Comente a linha abaixo para não ter timeout
   safety_timeout: 300  # 5 minutos
 
-  # Forçar desativação de posição ativa ao ativar outra
-  force_off_on_conflict: true
-
 input:
   # Matriz de entrada (keypad, etc)
   input_matrix:
@@ -98,7 +95,7 @@ python matrix_write.py reset
 | --------- | ------ | ------------------------------------------------------------------------------------------------------------------------------ |
 | `posição` | string | Posição a ser ativada. Formato: A1 (Coluna A Linha 1) ou 4 (quarta posição, numa matrix 3x3 seria a posição B1)              |
 | `duração` | float  | Tempo em segundos (obrigatório). Range: 0.5s até 600s (10 minutos)                                                            |
-| `reset`   | string | Comando especial para desativar todas as posições e limpar estado                                                             |
+| `reset`   | string | Comando especial para desativar todas as posições                                                                             |
 
 ### **Comportamento**
 
@@ -107,10 +104,6 @@ python matrix_write.py reset
 - Desativa automaticamente após tempo especificado
 - Range de duração: 0.5s até 600s (10 minutos)
 - Script aguarda até desativação automática
-
-**Conflitos:**
-- Se posição já está ativa → erro
-- Se outra posição estiver ativa → desativa automaticamente a outra
 
 ### **Exemplos**
 
@@ -132,10 +125,7 @@ python matrix_write.py reset
 Posição A2: ATIVADA por 2.0s
 
 # Reset
-Sistema resetado: todas as posições desativadas e estado limpo
-
-# Erro - posição já ativada
-ERRO: Posição A2 já está ativada
+Sistema resetado: todas as posições desativadas
 
 # Erro - duração não especificada
 ERRO: Duração em segundos é obrigatória
@@ -148,7 +138,6 @@ Exemplo: python matrix_write.py A1 2.0
 - `0` - Sucesso
 - `-1` - Erro genérico
 - `-2` - Posição inválida
-- `-3` - Posição já ativada
 - `-4` - Duração inválida
 - `-5` - Erro de hardware (GPIO)
 - `-6` - Arquivo de configuração não encontrado
@@ -261,12 +250,10 @@ python matrix_write.py C3 1.5
 | Mensagem                                 | Causa                              | Solução                                                |
 | ---------------------------------------- | ---------------------------------- | ------------------------------------------------------ |
 | `Posição X inválida`                     | Posição fora dos limites da matriz | Usar posição válida                                    |
-| `Posição já está ativa`                  | Tentou ativar posição já ativa     | Aguarde desativação automática ou use `reset`          |
 | `Duração inválida`                       | Valor fora de 0.5-600s             | Ajustar duração                                        |
 | `Duração em segundos é obrigatória`      | Não especificou duração            | Adicionar tempo: `python matrix_write.py A1 2.0`       |
 | `Erro ao acessar GPIO`                   | Permissões ou hardware             | Verificar permissões e conexões                        |
 | `Arquivo de configuração não encontrado` | Falta config.yaml                  | Criar arquivo de configuração                          |
-|                                          |                                    |                                    |
 
 ### **Mensagens de Erro - matrix_read.py**
 
@@ -334,13 +321,13 @@ matrix_control/
 Arquitetura em matriz permite apenas **1 posição ativada por vez**:
 
 ```bash
-# Correto
-python matrix_write.py A2 on 2.0
-python matrix_write.py A3 on 2.0
+# Correto - aguarda desativação antes de ativar próxima
+python matrix_write.py A2 2.0
+python matrix_write.py A3 2.0
 
-# Problemático
+# Problemático - ativa em background simultaneamente
 python matrix_write.py A2 10.0 &
-python matrix_write.py A3 10.0 &  # Tenta ativar a segunda posição antes de desativar a primeira!
+python matrix_write.py A3 10.0 &  # Tenta ativar a segunda posição simultaneamente!
 ```
 
 **Por quê?** Matriz compartilha linhas/colunas. Ativar duas posições simultaneamente causa interferência.
@@ -359,7 +346,7 @@ sudo usermod -a -G gpio $USER
 groups | grep gpio
 
 # Se não funcionar, executar scripts com sudo (não recomendado)
-sudo python matrix_write.py A2 on 2.0
+sudo python matrix_write.py A2 2.0
 ```
 
 ---
