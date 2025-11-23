@@ -3,15 +3,15 @@
 output:
   # Matriz de acionamento (LEDs, etc)
   pinout:
-    rows: [13, 19, 26]      # GPIO BCM numbering
-    cols: [17, 27, 22]
-    active_level: HIGH      # HIGH ou LOW (lógica do relé)
+    rows: [26, 19, 13]      # GPIO BCM numbering
+    cols: [22, 27, 17]
+    active_level: LOW       # HIGH ou LOW (lógica do relé)
 
 input:
   # Matriz de entrada (keypad, etc)
   input_matrix:
-    rows: [12, 16, 20]      # GPIO BCM numbering
-    cols: [25, 8, 7]
+    rows: [21, 20, 16]      # GPIO BCM numbering
+    cols: [12, 25, 24]
     pull_mode: DOWN         # DOWN ou UP
     closed_state: HIGH      # HIGH = Switch NA, LOW = Switch NC
 

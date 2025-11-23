@@ -146,9 +146,9 @@ def print_matrix_visual(matrix_state, num_rows, num_cols, box_width):
         row_str = f" {row + 1}  "
         for col in range(num_cols):
             if matrix_state[row][col] == 'on':
-                row_str += "[🟢]    "
+                row_str += "[X]    "
             else:
-                row_str += "[🔴]    "
+                row_str += "[ ]    "
 
         # Preencher espaço restante
         padding = box_width - len(row_str) - 3
