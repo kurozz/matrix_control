@@ -101,11 +101,11 @@ def setup_output_matrix(rows, cols, active_level):
 
 def setup_input_matrix(rows, cols, pull_mode):
     """
-    Configura matriz de entrada (rows como OUTPUT, cols como INPUT com pull resistor).
+    Configura matriz de entrada (rows como INPUT com pull resistor, cols como OUTPUT).
 
     Args:
-        rows (list): Lista de GPIOs para linhas (OUTPUT)
-        cols (list): Lista de GPIOs para colunas (INPUT)
+        rows (list): Lista de GPIOs para linhas (INPUT)
+        cols (list): Lista de GPIOs para colunas (OUTPUT)
         pull_mode (str): 'UP' ou 'DOWN'
 
     Exit codes:
@@ -114,15 +114,15 @@ def setup_input_matrix(rows, cols, pull_mode):
     setup_gpio()
 
     try:
-        # Configurar linhas como OUTPUT (para escanear)
-        for row_pin in rows:
-            GPIO.setup(row_pin, GPIO.OUT)
-            GPIO.output(row_pin, GPIO.LOW)  # Inicialmente LOW
-
-        # Configurar colunas como INPUT com pull resistor
-        pull = GPIO.PUD_UP if pull_mode == 'UP' else GPIO.PUD_DOWN
+        # Configurar colunas como OUTPUT (para escanear)
         for col_pin in cols:
-            GPIO.setup(col_pin, GPIO.IN, pull_up_down=pull)
+            GPIO.setup(col_pin, GPIO.OUT)
+            GPIO.output(col_pin, GPIO.LOW)  # Inicialmente LOW
+
+        # Configurar linhas como INPUT com pull resistor
+        pull = GPIO.PUD_UP if pull_mode == 'UP' else GPIO.PUD_DOWN
+        for row_pin in rows:
+            GPIO.setup(row_pin, GPIO.IN, pull_up_down=pull)
 
     except Exception as e:
         print(f"ERRO: Não foi possível configurar matriz de entrada: {e}")
@@ -229,30 +229,30 @@ def read_matrix(rows, cols, closed_state):
     matrix_state = []
 
     try:
-        for row_idx, row_pin in enumerate(rows):
-            row_state = []
+        for col_idx, col_pin in enumerate(cols):
+            col_state = []
 
-            # Ativar linha atual
-            GPIO.output(row_pin, GPIO.HIGH)
+            # Ativar coluna atual
+            GPIO.output(col_pin, GPIO.HIGH)
 
-            # Ler todas as colunas
-            for col_idx, col_pin in enumerate(cols):
-                col_value = GPIO.input(col_pin)
+            # Ler todas as linhas
+            for row_idx, row_pin in enumerate(rows):
+                row_value = GPIO.input(row_pin)
 
                 # Determinar se está ativo
                 if closed_state == 'HIGH':
-                    is_active = (col_value == GPIO.HIGH)
+                    is_active = (row_value == GPIO.HIGH)
                 else:
-                    is_active = (col_value == GPIO.LOW)
+                    is_active = (row_value == GPIO.LOW)
 
-                row_state.append('on' if is_active else 'off')
+                col_state.append('on' if is_active else 'off')
 
-            # Desativar linha
-            GPIO.output(row_pin, GPIO.LOW)
+            # Desativar coluna
+            GPIO.output(col_pin, GPIO.LOW)
+            matrix_state.append(col_state)
 
-            matrix_state.append(row_state)
-
-        return matrix_state
+        matrix_reverse = [[matrix_state[j][i] for j in range(len(matrix_state))] for i in range(len(matrix_state[0]))]
+        return matrix_reverse
 
     except Exception as e:
         print(f"ERRO: Não foi possível ler matriz de entrada: {e}")

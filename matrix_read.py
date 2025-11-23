@@ -108,12 +108,12 @@ def print_monitor_header(interval, num_cols):
 
     # Título
     title = "   Matrix Monitor"
-    padding = box_width - len(title) - 3
+    padding = box_width - len(title) - 2
     print(f"│{title}{' ' * padding}│")
 
     # Info
     info = f"   Update interval: {interval}s | Ctrl+C to exit"
-    padding = box_width - len(info) - 3
+    padding = box_width - len(info) - 2
     print(f"│{info}{' ' * padding}│")
 
     # Divisor
@@ -138,7 +138,7 @@ def print_matrix_visual(matrix_state, num_rows, num_cols, box_width):
         col_letter = chr(ord('A') + col)
         col_headers += f"{col_letter}      "
 
-    padding = box_width - len(col_headers) - 3
+    padding = box_width - len(col_headers) - 2
     print(f"│{col_headers}{' ' * padding}│")
 
     # Linhas da matriz
@@ -146,12 +146,12 @@ def print_matrix_visual(matrix_state, num_rows, num_cols, box_width):
         row_str = f" {row + 1}  "
         for col in range(num_cols):
             if matrix_state[row][col] == 'on':
-                row_str += "[🟢]    "
+                row_str += "[X]    "
             else:
-                row_str += "[🔴]    "
+                row_str += "[ ]    "
 
         # Preencher espaço restante
-        padding = box_width - len(row_str) - 3
+        padding = box_width - len(row_str) - 2
         print(f"│{row_str}{' ' * padding}│")
 
     # Rodapé
