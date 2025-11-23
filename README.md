@@ -5,8 +5,8 @@
 Sistema de controle de acionamento e leitura de matrizes para Raspberry Pi.
 
 **Scripts:**
-- `matrix_write.py` - Script para acionamento de matriz de saída (eg. matriz de led)
-- `matrix_read.py` - Script para leitura de uma matriz de entrada (eg. keypad)
+- `matrix_write.py` - Script para acionamento de matriz de saída (ex: relés, LEDs)
+- `matrix_read.py` - Script para leitura de uma matriz de entrada (ex: reed switches, teclado matricial)
 
 ---
 
@@ -50,17 +50,17 @@ nano config.yaml  # Ajuste os GPIOs conforme seu hardware
 # config.yaml
 
 output:
-  # Matriz de acionamento (LEDs, etc)
+  # Matriz de acionamento (relés, LEDs, etc)
   pinout:
-    rows: [22, 23, 24]      # GPIO BCM numbering
-    cols: [17, 18, 27]
-    active_level: HIGH      # HIGH ou LOW (lógica do relé)
+    rows: [26, 19, 13]      # GPIO BCM numbering
+    cols: [22, 27, 17]
+    active_level: LOW       # HIGH ou LOW (lógica do relé/dispositivo)
 
 input:
-  # Matriz de entrada (keypad, etc)
+  # Matriz de entrada (reed switches, teclado matricial, etc)
   input_matrix:
-    rows: [16, 26, 20]      # GPIO BCM numbering
-    cols: [12, 13, 19]
+    rows: [21, 20, 16]      # GPIO BCM numbering (configurados como INPUT)
+    cols: [12, 25, 24]      # GPIO BCM numbering (configurados como OUTPUT)
     pull_mode: DOWN         # DOWN ou UP
     closed_state: HIGH      # HIGH = Switch NA, LOW = Switch NC
 
@@ -153,12 +153,15 @@ python matrix_read.py [--interval intervalo]
 
 | Parâmetro    | Tipo  | Descrição                                                                                                              |
 | ------------ | ----- | ---------------------------------------------------------------------------------------------------------------------- |
-| `--interval` | float | Habilita modo contínuo. Valor é o intervalo entre leituras. Se não for definido, utilizará o intervalo do config.yaml. |
+| `--interval` | float | Habilita modo contínuo com intervalo especificado (em segundos). Sem este parâmetro, faz apenas uma leitura única. |
 ### **Comportamento**
 
 #### Leitura única
 
-1. Exibe status visual de todas as posições
+1. Faz uma leitura instantânea da matriz
+2. Retorna o estado em formato JSON
+3. Script finaliza imediatamente após a leitura
+
 #### Leitura contínua
 
 1. Faz a leitura a cada `intervalo` segundos
@@ -194,19 +197,19 @@ python matrix_read.py --interval 0.2
 
 ```
 ┌────────────────────────────────────────────┐
-│   Matrix monitor                           │
+│   Matrix Monitor                           │
 │   Update interval: 0.5s | Ctrl+C to exit   │
 ├────────────────────────────────────────────┤
 │     A      B      C                        │
-│ 1  [🟢]    [🟢]    [🟢]                    │
-│ 2  [🔴]    [🟢]    [🟢]                    │
-│ 3  [🟢]    [🔴]    [🟢]                    │
+│ 1  [X]    [ ]    [X]                       │
+│ 2  [ ]    [X]    [ ]                       │
+│ 3  [X]    [ ]    [X]                       │
 └────────────────────────────────────────────┘
 ```
 
 **Legenda:**
-- 🟢 = Ativado
-- 🔴 = Desativado
+- `[X]` = Ativado
+- `[ ]` = Desativado
 
 ### **Exit Codes**
 
@@ -310,6 +313,18 @@ matrix_control/
 - **matrix_read.py**: Não precisa do `matrix_write.py` rodando
 - Ambos podem rodar simultaneamente sem conflito
 - GPIO de leitura != GPIO de escrita (matrizes separadas)
+
+### **Arquitetura das Matrizes**
+
+**Matriz de Saída (output):**
+- Linhas (rows): Configuradas como OUTPUT
+- Colunas (cols): Configuradas como OUTPUT
+- Ativação: Uma linha e uma coluna são ativadas simultaneamente para acionar a posição
+
+**Matriz de Entrada (input):**
+- Linhas (rows): Configuradas como INPUT com pull resistor
+- Colunas (cols): Configuradas como OUTPUT para varredura
+- Leitura: Cada coluna é ativada sequencialmente e todas as linhas são lidas
 
 ### **Limitação de Acionamento Simultâneo**
 
